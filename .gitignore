@@ -1,0 +1,9 @@
+data/input_images
+data/model_output
+data/models
+
+.vscode/
+
+__pycache__
+
+x.txt
