@@ -1,17 +1,22 @@
 {
-    "GUI": "terminal",
-    "event_order": [
-        "booting",
-        "morph_1",
-        "analysis",
-        "morph_2",
-        "context"
-    ],
-    "event_times": {
-        "analysis_time": 3,
-        "booting_time": 0,
-        "context_time": 8,
-        "morph_1_time": 2,
-        "morph_2_time": 7
+    "generative_events": {
+        "analysis_time": {
+            "switch_img": 0.75
+        },
+        "booting_time": {
+            "trigger_1": [
+                0,
+                0.25
+            ]
+        }
+    },
+    "phase_times": {
+        "analysis_time": 4,
+        "booting_time": 1,
+        "branding_time": 0,
+        "context_time": 7,
+        "morph_1_time": 3,
+        "morph_2_time": 6,
+        "next_phase_time": 9
     }
 }

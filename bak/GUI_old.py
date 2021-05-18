@@ -51,15 +51,15 @@ class GUI():
                     if len(state) == 4:
                         if state[1] == "set":
                             if state[2] == "booting":
-                                self.settings["event_times"]["booting_time"] = int(state[3])
+                                self.settings["phase_times"]["booting_time"] = int(state[3])
                             elif state[2] == "morph_1":
-                                self.settings["event_times"]["morph_1_time"] = int(state[3])
+                                self.settings["phase_times"]["morph_1_time"] = int(state[3])
                             elif state[2] == "analysis":
-                                self.settings["event_times"]["analysis_time"] = int(state[3])
+                                self.settings["phase_times"]["analysis_time"] = int(state[3])
                             elif state[2] == "morph_2":
-                                self.settings["event_times"]["morph_2_time"] = int(state[3])
+                                self.settings["phase_times"]["morph_2_time"] = int(state[3])
                             elif state[2] == "context":
-                                self.settings["event_times"]["context_time"] = int(state[3])
+                                self.settings["phase_times"]["context_time"] = int(state[3])
                             else:
                                 print("setting does not exist")
                             self.global_manager.set_settings(self.settings)

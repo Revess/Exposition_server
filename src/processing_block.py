@@ -21,8 +21,10 @@ class Processing_block():
         for layer in self.activation_model.layers[1:]:
             self.layer_names.append(layer.name)
 
+        self.settings = self.global_manager.finished_loading()
+
         self.settings = self.global_manager.get_settings()
-        self.event = self.settings["event_order"][self.global_manager.get_event_header()]
+        self.event = self.global_manager.get_event()[:-5]
 
     def create_model(self,image_shape,num_classes):
         model = tf.keras.Sequential([
@@ -51,62 +53,74 @@ class Processing_block():
                     d2_array[row_index,col_index] += str(d3_array[row_index,col_index,block_index])+" | "
         return d2_array
 
-    def run_process(self):
+    def run_booting_process(self):
         while(True):
             self.settings = self.global_manager.get_settings()
-            self.event = self.settings["event_order"][self.global_manager.get_event_header()]
+            self.event = self.global_manager.get_event()[:-5]
             if self.global_manager.get_command() == 'exit':
                 break
 
-            if self.event == 'context':
-                image = os.listdir(self.directory)[rnd(0,len(os.listdir(self.directory))-1)]
-                ##Open and process the image
+            if self.event != 'booting' and not self.global_manager.get_booting_ready():
+                image = os.listdir(self.directory)[self.global_manager.get_input_img()]
                 img_array = tf.keras.preprocessing.image.load_img(self.directory+image, target_size=(312, 576),color_mode="rgb")
                 img_array = tf.keras.preprocessing.image.img_to_array(img_array)
                 img_array = tf.expand_dims(img_array, 0) # Create a batch
-                ##Create the layer outputs and the model prediction
-                prediction = self.activation_model.predict(img_array)
-                pred = self.model.predict(img_array)
-
-                ##Create the booting sequence
                 for layer in self.model.layers:
                     if self.global_manager.get_command() == 'exit':
+                        break
+                    elif self.global_manager.get_event()[:-5] != 'booting':
                         break
                     weights = layer.get_weights()
                     if len(weights) > 1:
                         weights = weights[0]
                     weights = np.array(weights)
-                    if weights.shape[0] > 512:
-                        for i in range(weights.shape[0]):
-                            if self.global_manager.get_command() == 'exit':
-                                break
-                            self.server.send_message("/weights/"+str(layer.name)+"/"+str(i),weights[i,:])
-                    else:
-                        for i in range(weights.shape[-1]):
-                            if self.global_manager.get_command() == 'exit':
-                                break
-                            if len(weights.shape) >= 3:
-                                self.server.send_message("/weights/"+str(layer.name)+"/"+str(i),weights[:,:,:,i])
-                            else:
-                                self.server.send_message("/weights/"+str(layer.name)+"/"+str(i),weights[:,i])
-                
-                self.global_manager.set_finished_processes(True)
+                    if "conv" in layer.name:
+                        self.global_manager.set_progress_bar(layer.name+"weights",len(range(weights.shape[-1])))
+                        for filter_kernel in range(weights.shape[-1]):
+                            self.global_manager.update_progress_bar(layer.name+"weights",filter_kernel)
+                            output = np.mean(weights[:,:,:,filter_kernel],axis=2)
+                            self.server.send_message("/weights/"+str(layer.name)[:4]+"/"+str(layer.name)[4:]+"_"+str(filter_kernel),output+np.random.normal(loc=0,scale=0.01,size=output.shape))
+                        self.global_manager.remove_progress_bar(layer.name+"weights")
+                    elif "dense" in layer.name:
+                        output = np.mean(weights,axis=0)
+                        self.server.send_message("/weights/"+str(layer.name)[:5]+"/"+str(layer.name)[5:]+"0",output+np.random.normal(loc=0,scale=0.1,size=output.shape))
+                self.global_manager.set_booting_ready(True)
 
-            if self.event == 'analysis':
-                ##Save images in between the layers
+    def run_analysisprocess(self):
+        while(True):
+            self.settings = self.global_manager.get_settings()
+            self.event = self.global_manager.get_event()[:-5]
+            if self.global_manager.get_command() == 'exit':
+                break
+              
+            if self.event != 'analysis' and not self.global_manager.get_analysis_ready():
+                image = os.listdir(self.directory)[self.global_manager.get_input_img()]
+                img_array = tf.keras.preprocessing.image.load_img(self.directory+image, target_size=(312, 576),color_mode="rgb")
+                img_array = tf.keras.preprocessing.image.img_to_array(img_array)
+                img_array = tf.expand_dims(img_array, 0) # Create a batch
+                prediction = self.activation_model.predict(img_array)
+                pred = self.model.predict(img_array)
+
                 for index,layer in enumerate(prediction):
                     if self.global_manager.get_command() == 'exit':
                         break
+                    layer_name = self.layer_names[index]
                     layer = np.squeeze(layer)
-                    if len(layer.shape) == 3:
-                        for i in range(layer.shape[-1]):
+                    if "conv" in layer_name or "mp" in layer_name:
+                        self.global_manager.set_progress_bar(layer_name+"conv",len(range(layer.shape[-1])))
+                        for img in range(layer.shape[-1]):
                             if self.global_manager.get_command() == 'exit':
                                 break
-                            save_image(np.array(layer[:,:,i]),self.layer_names[index],i)
-                            # if layer_names[index][:4] == "conv":
-                                # save_image(activation_model.layers[index+1].activation(np.copy(np.array(layer[:,:,i]))),layer_names[index]+"relu_activation",i)
-                    elif len(layer.shape) == 1:
-                        save_image(np.array(layer),self.layer_names[index],i)
+                            self.global_manager.update_progress_bar(layer_name+"conv",img)
+                            if np.mean(layer[:,:,img]) == 0.0 or (np.mean(layer[:,:,img]) >= 95.0/255 and np.mean(layer[:,:,img]) < 97.0/255):
+                                pass
+                            else:
+                                save_image(layer[:,:,img],layer_name,img)
+                                # self.server.send_message("/img",str(layer_name)+"\\"+str(layer_name)+"_"+str(img)+".png")
+                        self.global_manager.remove_progress_bar(layer_name+"conv")
+                    elif "dense" in layer_name or "flatten" in layer_name:
+                        save_image(layer,layer_name,0,size=())
+                        # self.server.send_message("/img",str(layer_name)+"\\"+str(layer_name)+"_"+str(0)+".png")
 
                 ##process the other variables
                 for index,layer in enumerate(self.activation_model.layers):
@@ -121,5 +135,4 @@ class Processing_block():
                         self.server.send_message("/filters"+str(layer.name),layer.filters)
                         self.server.send_message("/padding"+str(layer.name),layer.padding)
                         self.server.send_message("/class_names"+str(layer.name),self.class_names[np.argmax(tf.keras.activations.sigmoid(pred[0]))])
-                
-                self.global_manager.set_finished_processes(True)
+                self.global_manager.set_analysis_ready(True)

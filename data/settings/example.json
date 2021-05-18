@@ -1,0 +1,11 @@
+{
+    "GUI": "terminal",
+    "phase_times": {
+        "phase_name": "start_time as an int in minutes"
+    },
+    "generative_events": {
+        "parent_name": {
+            "event_name": ["percentage pos of parent","chance"]
+        }
+    }
+}

@@ -1,0 +1,6 @@
+tensorflow
+pillow
+python-osc
+numpy
+pandas
+sockets

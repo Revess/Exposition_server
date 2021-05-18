@@ -1,0 +1,17 @@
+{
+    "GUI": "terminal",
+    "phase_times": {
+        "analysis_time": 3,
+        "booting_time": 1,
+        "branding_time": 0,
+        "context_time": 5,
+        "morph_1_time": 2,
+        "morph_2_time": 4,
+        "next_phase_time": 6
+    },
+    "generative_events": {
+        "booting_time": {
+            "trigger_1": [0,0.25]
+        }
+    }
+}
