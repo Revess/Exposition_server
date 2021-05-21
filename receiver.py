@@ -13,7 +13,7 @@ def print_handler(address, *args):
 def default_handler(address, *args):
     if "img" not in address:
         print(f"DEFAULT {address}: {args}")
-    elif "img" in address:
+    elif "img" in address or "event" in address:
         print(f"DEFAULT{address}: {args}")
 
 print("start osc_server")

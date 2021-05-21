@@ -175,23 +175,38 @@ class GUI():
                     elif type(value) == type(dict()):
                         self.boxes["json_data"].addstr(index+3, offset, (str(key)+": {"))
                         index+=1
-                        for sub_dict_key, sub_dict_value in sorted(value.items(), key=lambda item: item[1]):
-                            if type(sub_dict_value) == type(dict()):
-                                pass
-                                '''
-                                self.boxes["json_data"].addstr(index+3, offset+4, (str(sub_dict_key)+": {"))
-                                index+=1
-                                for sub_sub_dict_key, sub_sub_dict_value in sorted(sub_dict_value.items(), key=lambda item: item[1]):
-                                    self.boxes["json_data"].addstr(index+3, offset+5, (str(sub_sub_dict_key)+": ["))
-                                    self.boxes["json_data"].addstr(index+3, len((str(sub_sub_dict_key)+": ["))+offset+5, (str(sub_sub_dict_value[0])+", "))
-                                    self.boxes["json_data"].addstr(index+3, len((str(sub_sub_dict_key)+": ["))+len(str(sub_sub_dict_value[0])+", ")+offset+5, (str(sub_sub_dict_value[1])+"]"))
+                        if key == "generative_events":
+                            for sub_key, sub_value in value.items():
+                                if type(sub_value) == type(dict()):
+                                    self.boxes["json_data"].addstr(index+3, offset+4, (str(sub_key)+": {"))
                                     index+=1
-                                self.boxes["json_data"].addstr(index+3, offset+4, "}")
-                                index+=1
-                                '''
-                            else:
-                                self.boxes["json_data"].addstr(index+3, offset+4, (str(sub_dict_key)+": "))
-                                self.boxes["json_data"].addstr(index+3, len((str(sub_dict_key)+": "))+offset+4, (str(sub_dict_value)+","))
+                                    for sub_sub_key, sub_sub_value in sorted(sub_value.items(), key=lambda item: item[1]):
+                                        if type(sub_sub_value) == type(list()):
+                                            self.boxes["json_data"].addstr(index+3, offset+8, (str(sub_sub_key)+": ["))
+                                            index+=1
+                                            for output in sub_sub_value:
+                                                self.boxes["json_data"].addstr(index+3, offset+12, (str(output)+","))
+                                                index+=1
+                                            self.boxes["json_data"].addstr(index+3, offset+8, "]")
+                                            index+=1
+                                        elif type(sub_sub_value) == type(float()) or type(sub_sub_value) == type(int()):
+                                            self.boxes["json_data"].addstr(index+3, offset+8, (str(sub_sub_key)+": "+str(sub_sub_value)))
+                                            index+=1
+                                            
+                                    '''
+                                        self.boxes["json_data"].addstr(index+3, offset+5, (str(sub_sub_dict_key)+": ["))
+                                        self.boxes["json_data"].addstr(index+3, len((str(sub_sub_dict_key)+": ["))+offset+5, (str(sub_sub_dict_value[0])+", "))
+                                        self.boxes["json_data"].addstr(index+3, len((str(sub_sub_dict_key)+": ["))+len(str(sub_sub_dict_value[0])+", ")+offset+5, (str(sub_sub_dict_value[1])+"]"))
+                                        index+=1
+                                    '''
+                                    self.boxes["json_data"].addstr(index+3, offset+4, "}")
+                                    index+=1
+                                else:
+                                    print(key,sub_key,sub_value)
+                        elif key == "phase_times":
+                            for sub_key, sub_value in sorted(value.items(), key=lambda item: item[1]):
+                                self.boxes["json_data"].addstr(index+3, offset+4, (str(sub_key)+": "))
+                                self.boxes["json_data"].addstr(index+3, len((str(sub_key)+": "))+offset+4, (str(sub_value)+","))
                                 index+=1
                         self.boxes["json_data"].addstr(index+3, offset, "}")
                         index+=2
@@ -224,6 +239,7 @@ class GUI():
             current_time_s = round(self.clock.get_time(),2)
             current_time_s = "Current_time: M: "+str(int(current_time_s/60))+" S: "+str(int(current_time_s%60))
             event = "Current event: "+str(self.global_manager.get_event())[:-5]
+            # self.server.send_message("/system",current_time_s)
             self.boxes["timer"].addstr(3, round(self.box_dimension["timer"][1]/2)-round(len(current_time_s)/2), current_time_s)
             self.boxes["timer"].addstr(4, round(self.box_dimension["timer"][1]/2)-round(len(event)/2),event)
             self.boxes["timer"].refresh()
@@ -240,13 +256,15 @@ class GUI():
             curses.curs_set(0)
 
             self.boxes["progress"].addstr(1, round(self.box_dimension["progress"][1]/2)-round(len("LOADING_PROGRESS")/2),"LOADING_PROGRESS")
-            for index,name_bar in enumerate(self.global_manager.get_progress_bars().items()):
+            local_dict = self.global_manager.get_progress_bars().items()
+            for index,name_bar in enumerate(local_dict):
                 name = name_bar[0]
                 bar = name_bar[1]
                 percent = ("{0:." + str(1) + "f}").format(100 * (bar[1] / float(bar[0])))
                 filledLength = int(30 * bar[1] // bar[0])
                 char_type = '█' * filledLength + '-' * (30 - filledLength)
                 output_string = f'\r{name} |{char_type}| {percent}% {bar[1]}/{bar[0]}'
+                self.server.send_message("/system",output_string)
                 self.boxes["progress"].addstr(3+index,round(self.box_dimension["progress"][1]/2)-round(len(output_string)/2),output_string)
             self.boxes["progress"].refresh()
             

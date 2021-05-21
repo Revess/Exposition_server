@@ -1,11 +1,19 @@
 {
     "generative_events": {
         "analysis_time": {
-            "switch_img": 0.75
+            "switch_img": 0.8
         },
         "booting_time": {
             "trigger_1": [
                 0,
+                0.25
+            ],
+            "trigger_2": [
+                1,
+                0.25
+            ],
+            "trigger_3": [
+                2,
                 0.25
             ]
         }

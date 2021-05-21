@@ -11,7 +11,7 @@ from src.processing_block import Processing_block
 from src.GUI import GUI
 
 parser = argparse.ArgumentParser(description='Interactive_art_server',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--addresses', default="127.0.0.1:7000 192.168.137.94:7000 192.168.137.122:7000 192.168.137.78:7000 192.168.137.135:7000", type=str, required=False, help='set addresses as a ip and port in form of a dict')
+parser.add_argument('--addresses', default="127.0.0.1:7000 192.168.137.184:7000 192.168.137.17:7000", type=str, required=False, help='set addresses as a ip and port in form of a dict')
 
 #TODO: make global settings variable which is editable by the terminal interaction
 
@@ -28,7 +28,7 @@ class Main():
         ##Globals
         self.global_manager = manager.global_manager()
 
-        ##create and check folder structure integraty
+        ##create and check folder structure integrity
         self.user_dir = self.init_structure()
         self.global_manager.set_settings(load_json("./data/settings/default.json"))
 
@@ -40,8 +40,8 @@ class Main():
 
         #create threads
         self.clock_thread = td.Thread(target=self.clock.event_handler)
-        self.processing_booting_thread = td.Thread(target=self.processing_block.run_booting_process)
-        self.processing_analysis_thread = td.Thread(target=self.processing_block.run_analysisprocess)
+        self.processing_booting_thread = td.Thread(target=self.processing_block.run_time_based_values)
+        self.processing_analysis_thread = td.Thread(target=self.processing_block.run_image_rendering)
         self.gui_thread = td.Thread(target=self.gui.run_gui)
 
     def init_structure(self):
@@ -67,10 +67,17 @@ class Main():
                         },
                     "generative_events": {
                         "booting_time": {
-                            "trigger_1": [0,0.25]
+                            "trigger_1": [0,0.25],
+                            "trigger_2": [0.5,0.25],
+                            "trigger_3": [0.3,0.25]
+                        },
+                        "booting_time": {
+                            "trigger_1": [0,0.25],
+                            "trigger_2": [1,0.25],
+                            "trigger_3": [2,0.25]
                         },
                         "analysis_time": {
-                            "switch_img": 0.75
+                            "switch_img": 0.8
                         }
                     }
                     },"./data/settings/default.json")

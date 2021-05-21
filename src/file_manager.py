@@ -48,18 +48,16 @@ def save_image(matrix,layer_name,name,size=None):
         w = 480
         save_im = np.asarray(Image.fromarray(np.squeeze(save_im)).resize((floor((height/save_im.shape[0])*save_im.shape[1]),height)))
         width = int((save_im.shape[1]-w)/2)
-        save_im = save_im[width:w+width,:]
+        save_im = save_im[:,width:w+width]
     elif layer_name == "conv2" or layer_name == "conv3" or layer_name == "conv4" or layer_name == "mp2" or layer_name == "mp3" or layer_name == "mp4":
         height = 320
         w = 270
         save_im = np.asarray(Image.fromarray(np.squeeze(save_im)).resize((floor((height/save_im.shape[0])*save_im.shape[1]),height)))
         width = int((save_im.shape[1]-w)/2)
-        save_im = save_im[width:w+width,:]
+        save_im = save_im[:,width:w+width]
     elif layer_name == "flatten" or layer_name == "dense_1" or layer_name == "dense":
         height = 180
         w = 960
-        save_im = np.asarray(Image.fromarray(np.squeeze(save_im)).resize((floor((height/save_im.shape[0])*save_im.shape[1]),height)))
-        width = int((save_im.shape[1]-w)/2)
-        save_im = save_im[width:w+width,:]
+        save_im = np.asarray(Image.fromarray(np.squeeze(save_im)).rotate(90).resize((w,height)))
         
     Image.fromarray(np.squeeze(save_im)).save("./data/model_output/images/"+str(layer_name)+"/"+str(layer_name)+"_"+str(name)+".png")

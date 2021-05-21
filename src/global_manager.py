@@ -5,16 +5,15 @@ class global_manager():
     def __init__(self):
         self.command = ''
         self.settings = {}
-        self.event_header = -4
+        self.event_header = -3
         self.event = []
         self.num_of_events = 0
         self.changes = True
         self.loading_AI = False
         self.maximum = 0
-        self.booting_ready = False
         self.analysis_ready = False
         self.progress_bars = {}
-        self.generative_events = None ##TODO: FIX EVERYTHING, BUG: cannot find key for context of generative event
+        self.generative_events = None
         self.directory = "./data/input_images/"
         self.loading_image = rnd(0,len(os.listdir(self.directory))-1)
 
@@ -69,18 +68,14 @@ class global_manager():
         self.event = sorted(self.settings["phase_times"].items(), key=lambda item: item[1])[self.event_header][0]
         if self.event in self.settings["generative_events"].keys():
             self.generative_events = self.settings["generative_events"][self.event].items()
+        else:
+            self.generative_events = None
 
     def finished_loading(self):
         self.loading_AI = True
 
     def get_loading_status(self):
         return self.loading_AI
-
-    def set_booting_ready(self,process):
-        self.booting_ready = process
-
-    def get_booting_ready(self):
-        return self.booting_ready
 
     def set_analysis_ready(self,process):
         self.analysis_ready = process
